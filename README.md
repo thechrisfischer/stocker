@@ -28,7 +28,7 @@ source commander.sh setup
 
 Start the application
 ```
-./commander runapp
+./commander startapp
 ```
 
 Stop the application
