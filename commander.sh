@@ -21,14 +21,13 @@ function db_setup() {
 # check if a venv exists, if not create activate it
 function create_virtualenv() {
     if [ ! -d "venv" ]; then
-        virtualenv venv
+        virtualenv -p python3 venv
     fi
 }
 
 # install python dependencies (python3)
 function python_setup() {
     source venv/bin/activate
-    which python
     pip3 install -r requirements.txt
 }
 
