@@ -74,5 +74,4 @@ case "$1" in
         ;;
     *)
         echo $"Usage: $0 {setup | startapp | stopapp | refresh_db}"
-        exit 1
 esac

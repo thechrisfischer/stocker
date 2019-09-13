@@ -17,8 +17,8 @@
 Setup a database (only should have do this once)
 ```
 psql
-create database skeleton;
-create user assets with password 'skeleton' CREATEDB;
+create database stocker;
+create user assets with password 'stocker' CREATEDB;
 ```
 
 This will setup the application using commander
@@ -28,7 +28,7 @@ source commander.sh setup
 
 Start the application
 ```
-./commander runapp
+./commander startapp
 ```
 
 Stop the application
