@@ -28,7 +28,6 @@ function create_virtualenv() {
 # install python dependencies (python3)
 function python_setup() {
     source venv/bin/activate
-    which python
     pip3 install -r requirements.txt
 }
 
