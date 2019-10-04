@@ -21,7 +21,7 @@ function db_setup() {
 # check if a venv exists, if not create activate it
 function create_virtualenv() {
     if [ ! -d "venv" ]; then
-        virtualenv venv
+        virtualenv -p python3 venv
     fi
 }
 
@@ -45,7 +45,6 @@ function start() {
     python3 manage.py runserver &
     cd static || exit
     npm start &
-#    npm run build:production
     cd ..
 }
 
