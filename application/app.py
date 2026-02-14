@@ -1,7 +1,7 @@
-import json
 import logging
+import os
 
-from flask import request, render_template, render_template_string, jsonify, g
+from flask import request, render_template, jsonify, g, send_from_directory
 from sqlalchemy.exc import IntegrityError
 
 from index import app, db, limiter
@@ -11,17 +11,24 @@ from .utils.auth import generate_token, requires_auth, verify_token
 
 logger = logging.getLogger(__name__)
 
-REACT_COMPONENT_TEMPLATE = "<div data-react-props='{{props}}' data-react-class={{ name }}></div>"
+
+# --- SPA serving ---
+# Serve the Vite-built frontend. For any non-API route, return index.html
+# so React Router can handle client-side routing.
 
 
-@app.template_global()
-def react_component(name, props={}):
-    return render_template_string(REACT_COMPONENT_TEMPLATE, name=name, props=json.dumps(props))
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_spa(path):
+    dist_dir = app.static_folder
+    if path:
+        file_path = os.path.join(dist_dir, path)
+        if os.path.isfile(file_path):
+            return send_from_directory(dist_dir, path)
+    return send_from_directory(dist_dir, "index.html")
 
 
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("templates/index.html")
+# --- API routes ---
 
 
 @app.route("/api/health", methods=["GET"])

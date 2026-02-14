@@ -13,7 +13,8 @@ class TestAPI(BaseTestConfig):
 
     def test_get_spa_from_index(self):
         result = self.app.get("/")
-        self.assertIn("<html>", result.data.decode("utf-8"))
+        self.assertEqual(result.status_code, 200)
+        self.assertIn("Stocker", result.data.decode("utf-8"))
 
     def test_create_new_user(self):
         self.assertIsNone(
