@@ -1,61 +1,58 @@
 #!/bin/bash
 
-# setup global application config here
-export DATABASE_URL="postgresql://stocker:stocker@localhost/assets"
-
-# setup a database if it hasn't been done so
-function db_init() {
-    psql -c "create database stocker;"
-    psql -c "create user stocker with password 'stocker' CREATEDB;"
-}
-
-function db_drop() {
-    psql -c "drop database stocker;"
-}
+# SQLite database - no external database server needed
+export DATABASE_URL="sqlite:///stocker.db"
 
 function db_setup() {
-    export DATABASE_URL="postgresql://stocker:stocker@localhost/stocker"
-    python3 manage.py create_db
+    source venv/bin/activate
+    flask create-db
 }
 
-# check if a venv exists, if not create activate it
-function create_virtualenv() {
-    if [ ! -d "venv" ]; then
-        virtualenv -p python3 venv
+function db_backup() {
+    if [ -f "stocker.db" ]; then
+        sqlite3 stocker.db ".backup backups/stocker-$(date +%Y%m%d-%H%M%S).db"
+        echo "Backup created in backups/"
+    else
+        echo "No database file found"
     fi
 }
 
-# install python dependencies (python3)
+# check if a venv exists, if not create and activate it
+function create_virtualenv() {
+    if [ ! -d "venv" ]; then
+        python3 -m venv venv
+    fi
+}
+
+# install python dependencies
 function python_setup() {
     source venv/bin/activate
-    pip3 install -r requirements.txt
+    pip install -r requirements.txt
 }
 
 # go into the static node directory and install npm packages
 function npm_setup() {
     cd static || exit
-    npm run build
     npm install
+    npm run build
     cd ..
 }
 
 function start() {
     source venv/bin/activate
-    python3 manage.py runserver &
+    flask run --port 5000 &
     cd static || exit
     npm start &
     cd ..
 }
 
 function stop() {
-    lsof -n -i:3000 | grep LISTEN | awk '{print $2}' | xargs kill
-    lsof -n -i:5000 | grep LISTEN | awk '{print $2}' | xargs kill
-
+    lsof -n -i:3000 | grep LISTEN | awk '{print $2}' | xargs kill 2>/dev/null
+    lsof -n -i:5000 | grep LISTEN | awk '{print $2}' | xargs kill 2>/dev/null
 }
 
 case "$1" in
     setup)
-        db_init
         create_virtualenv
         python_setup
         npm_setup
@@ -67,10 +64,13 @@ case "$1" in
     stopapp)
         stop
         ;;
+    backup)
+        db_backup
+        ;;
     refresh_db)
-        db_drop
-        db_init
+        rm -f stocker.db
+        db_setup
         ;;
     *)
-        echo $"Usage: $0 {setup | startapp | stopapp | refresh_db}"
+        echo $"Usage: $0 {setup | startapp | stopapp | backup | refresh_db}"
 esac

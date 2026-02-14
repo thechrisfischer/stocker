@@ -1,0 +1,20 @@
+# Replace yourdomain.com with your actual domain.
+# Caddy automatically provisions HTTPS via Let's Encrypt.
+yourdomain.com {
+    # API requests -> Gunicorn
+    handle /api/* {
+        reverse_proxy localhost:8000
+    }
+
+    # SPA frontend - serve static files, fall back to index.html
+    handle {
+        root * /opt/stocker/static/dist
+        file_server
+        try_files {path} /index.html
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/stocker-access.log
+    }
+}

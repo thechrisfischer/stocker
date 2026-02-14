@@ -1,0 +1,18 @@
+[Unit]
+Description=Stocker Flask App
+After=network.target
+
+[Service]
+User=stocker
+Group=stocker
+WorkingDirectory=/opt/stocker
+Environment=DATABASE_URL=sqlite:////opt/stocker/data/stocker.db
+Environment=SECRET_KEY=CHANGE_ME_TO_A_REAL_SECRET
+Environment=FLASK_DEBUG=false
+Environment=LOG_LEVEL=INFO
+ExecStart=/opt/stocker/venv/bin/gunicorn -w 2 -b 127.0.0.1:8000 main:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

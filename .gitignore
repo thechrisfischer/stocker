@@ -1,5 +1,8 @@
 *.db
+*.db-wal
+*.db-shm
 .DS_Store
+.env
 venv
 env
 __pycache__
@@ -9,3 +12,5 @@ node_modules
 *.pyc
 tmp
 static/dist
+htmlcov/
+backups/
