@@ -4,7 +4,7 @@ primary_region = "ewr"
 [build]
 
 [env]
-  DATABASE_URL = "sqlite:///data/stocker.db"
+  DATABASE_URL = "sqlite:////data/stocker.db"
 
 [mounts]
   source = "stocker_data"
