@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}StockRocker{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        :root {
+            --pico-font-size: 16px;
+        }
+        body { min-height: 100vh; display: flex; flex-direction: column; }
+        main { flex: 1; }
+        nav .brand { font-weight: 700; font-size: 1.25rem; }
+        .hero { text-align: center; padding: 2rem 0; }
+        .hero h1 { margin-bottom: 0.5rem; }
+        .hero p { color: var(--pico-muted-color); }
+        .strategy-section { margin-bottom: 2rem; }
+        .strategy-section h3 { margin-bottom: 0.25rem; }
+        .strategy-section p { color: var(--pico-muted-color); margin-bottom: 0.75rem; font-size: 0.9rem; }
+        table { font-size: 0.875rem; }
+        td.number, th.number { text-align: right; }
+        .flash { padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+        .flash-error { background: #fee; color: #c00; border: 1px solid #fcc; }
+        .flash-success { background: #efe; color: #060; border: 1px solid #cfc; }
+        footer { text-align: center; padding: 1rem 0; color: var(--pico-muted-color); font-size: 0.8rem; }
+        .rank-badge {
+            display: inline-block; min-width: 2rem; text-align: center;
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;
+        }
+        .rank-1 { background: #ffd700; color: #333; }
+        .rank-2 { background: #c0c0c0; color: #333; }
+        .rank-3 { background: #cd7f32; color: #fff; }
+        .stat-card { text-align: center; padding: 1rem; }
+        .stat-card .number { font-size: 2rem; font-weight: 700; }
+        .stat-card .label { color: var(--pico-muted-color); font-size: 0.85rem; }
+        .auth-form { max-width: 400px; margin: 2rem auto; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><a href="/" class="brand">StockRocker</a></li>
+        </ul>
+        <ul>
+            {% if user %}
+                <li><small>{{ user.email }}</small></li>
+                <li><a href="/logout" role="button" class="outline secondary">Logout</a></li>
+            {% else %}
+                <li><a href="/login">Login</a></li>
+                <li><a href="/register" role="button">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="container">
+        <p>StockRocker &mdash; Stock analysis and investment research</p>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
