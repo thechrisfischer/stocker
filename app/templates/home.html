@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}StockRocker — Stock Rankings{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>StockRocker</h1>
+    <p>Ranking publicly traded companies by financial metrics</p>
+    {% if stats %}
+    <div class="grid" style="max-width: 600px; margin: 1rem auto;">
+        <div class="stat-card">
+            <div class="number">{{ stats.companies }}</div>
+            <div class="label">Companies</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ stats.strategies }}</div>
+            <div class="label">Strategies</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ stats.last_updated or "—" }}</div>
+            <div class="label">Last Updated</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if not user %}
+<article style="text-align: center;">
+    <p><a href="/login">Login</a> or <a href="/register">register</a> to view full rankings.</p>
+</article>
+{% endif %}
+
+{% for strategy in strategies %}
+<section class="strategy-section">
+    <h3>{{ strategy.name }}</h3>
+    <p>{{ strategy.description }}</p>
+
+    {% if strategy.rankings %}
+    <figure>
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th class="number">Score</th>
+                <th class="number">P/E (TTM)</th>
+                <th class="number">P/E (FTM)</th>
+                <th class="number">ROA %</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in strategy.rankings[:25] %}
+            <tr>
+                <td>
+                    <span class="rank-badge {% if row.rank <= 3 %}rank-{{ row.rank }}{% endif %}">
+                        {{ row.rank }}
+                    </span>
+                </td>
+                <td><strong>{{ row.symbol }}</strong></td>
+                <td>{{ row.name or "—" }}</td>
+                <td class="number">{{ "%.2f"|format(row.score) if row.score is not none else "—" }}</td>
+                <td class="number">{{ "%.1f"|format(row.pe_ratio_ttm) if row.pe_ratio_ttm is not none else "—" }}</td>
+                <td class="number">{{ "%.1f"|format(row.pe_ratio_ftm) if row.pe_ratio_ftm is not none else "—" }}</td>
+                <td class="number">{{ "%.1f"|format(row.return_on_assets) if row.return_on_assets is not none else "—" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </figure>
+    {% else %}
+    <p><em>No ranking data available yet. Import stock data to see results.</em></p>
+    {% endif %}
+</section>
+{% endfor %}
+
+{% if not strategies %}
+<article>
+    <p>No stock data has been imported yet. Rankings will appear here once data is loaded.</p>
+</article>
+{% endif %}
+
+{% endblock %}
