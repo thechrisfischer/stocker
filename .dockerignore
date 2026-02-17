@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.env
+.git
+.gitignore
+v1/
+static/node_modules/
+static/dist/
+*.md
+.pytest_cache
+.coverage
+htmlcov
+venv

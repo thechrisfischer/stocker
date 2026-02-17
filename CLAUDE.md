@@ -1,162 +1,139 @@
-# Stocker
+# StockRocker
 
 ## Project Overview
 
-Stocker is a full-stack web application for stock analysis and investment research. It ranks publicly traded companies using financial metrics (Magic Formula, EBITDA, P/E ratios, GARP, ROA, ROE, dividend yield) and presents ranked results through a web interface. The project has two generations: a legacy v1 system (Flask + Peewee + server-rendered templates) and a current v2 skeleton (Flask REST API + React/Redux SPA) that implements user authentication but has not yet migrated the stock analysis features.
+StockRocker is a full-stack web application for stock analysis and investment research. It ranks publicly traded companies using financial metrics (Magic Formula, EBITDA, P/E ratios, GARP, ROA, ROE, dividend yield) and presents ranked results through a REST API. The application is being modernized from a legacy Flask/React stack to FastAPI + SQLModel, deployed on Fly.io with SQLite.
 
 ## Architecture
 
-### Backend (Python/Flask)
-- **Entry point**: `index.py` - creates Flask app, SQLAlchemy db, and Bcrypt instances
-- **Routes**: `application/app.py` - REST API endpoints and template-served pages
-- **Models**: `application/models.py` - SQLAlchemy User model with bcrypt password hashing
-- **Auth**: `application/utils/auth.py` - token generation/verification using `itsdangerous.TimedJSONWebSignatureSerializer`
-- **Email**: `application/libs/mailgun/mailgun.py` - Mailgun API integration for invitations
-- **Config**: `config.py` - BaseConfig and TestingConfig classes
-- **CLI**: `manage.py` - Flask-Script manager with db migration commands
-- **Migrations**: `migrations/` - Alembic database migration files
+### Backend (Python/FastAPI) — `app/`
+- **Entry point**: `app/main.py` — FastAPI app with lifespan, CORS, and router registration
+- **Config**: `app/config.py` — Pydantic Settings loading from environment / `.env`
+- **Database**: `app/database.py` — SQLModel engine, session management, SQLite WAL mode
+- **Models**: `app/models/` — SQLModel table models (User, Company, FinancialData) with built-in Pydantic schemas
+- **Routers**: `app/routers/` — API route handlers (auth, companies, rankings)
+- **Services**: `app/services/` — Business logic (auth token management, ranking calculations)
 
-### Frontend (React/Redux)
-- **Location**: `static/` directory
-- **Entry point**: `static/src/index.js` - mounts React components via jQuery DOM scanning
-- **Routing**: `static/src/routes.js` - React Router 3 routes
-- **State**: Redux store with thunk middleware (`static/src/store/configureStore.js`)
-- **Components**: `static/src/components/` - LoginView, RegisterView, ProtectedView, Header, Footer, Analytics, Home, NotFound
-- **Containers**: `static/src/containers/` - App, HomeContainer (smart components)
-- **Actions**: `static/src/actions/` - Redux action creators for auth flows
-- **Reducers**: `static/src/reducers/` - auth and data reducers
-- **Build**: Webpack 1 with Babel 6 (es2015, react, stage-0 presets)
-- **Dev server**: Express with webpack-dev-middleware and hot module replacement (`static/bin/server.js`)
-
-### Legacy v1 System (`v1/` directory)
-- **Web app**: `v1/webapp.py` - Flask app with Flask-Bootstrap, Flask-Nav, WTForms
-- **Database**: `v1/database.py` - Peewee ORM with Company and FinancialData models (40+ financial metric columns)
-- **Data layer**: `v1/data.py` - CRUD operations and raw SQL queries for rankings
-- **Import pipeline**: `v1/import_companies.py` (NASDAQ CSV scraper), `v1/import_financials.py` (Yahoo Finance + Quandl APIs)
-- **Calculations**: `v1/calc_financials.py` - computes derived metrics (PE ratio FTM, GARP ratio, Magic Formula) and ranking algorithms
-- **Algorithms**: `v1/alg.py` - ranking engine and strategy classes
+### Legacy code (not actively maintained)
+- `application/` — Old Flask REST API (v2 skeleton)
+- `v1/` — Original Flask + Peewee stock ranking system
+- `static/` — Old React 15 / Redux 3 / Webpack 1 frontend
 
 ## Tech Stack
 
-### Backend
-- Python 3.x, Flask, SQLAlchemy, Flask-SQLAlchemy, Flask-Migrate (Alembic)
-- Flask-Bcrypt (password hashing), itsdangerous (token auth)
-- Flask-Script (CLI), Flask-Testing, pytest, pytest-cov
-- Gunicorn (production WSGI server)
-- PostgreSQL (primary), MySQL and SQLite supported
+### Current (v3)
+- **Python 3.12**, FastAPI 0.115, Uvicorn
+- **SQLModel 0.0.22** (SQLAlchemy 2.0 + Pydantic under the hood)
+- **SQLite** with WAL mode on Fly.io persistent volume
+- **python-jose** (JWT auth), **passlib** (bcrypt password hashing)
+- **Pydantic Settings** for config management
+- **Docker** for containerization, **Fly.io** for deployment
 
-### Frontend
-- React 15.3.1, Redux 3.2.1, React Router 3.0.0
-- Material-UI 0.16.4, Bootstrap 3.3.5, Materialize CSS
-- Webpack 1.12.11, Babel 6 (es2015/react/stage-0)
-- Axios (HTTP), jQuery, SCSS/Sass
-- ESLint (Airbnb config), Karma/Mocha (test framework, no tests written)
-
-### Legacy v1 (not actively maintained)
-- Peewee ORM, SQLite, Flask-Bootstrap, Flask-Nav, WTForms
-- BeautifulSoup (web scraping), Quandl API, Yahoo Finance API
-- Python 2.x style code (print statements, StringIO imports)
+### Legacy
+- Flask, Flask-SQLAlchemy, Flask-Script, itsdangerous (v2 skeleton)
+- Peewee ORM, Yahoo Finance API, Quandl API (v1)
+- React 15, Redux 3, Webpack 1, Material-UI 0.16 (frontend)
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `index.py` | Flask app factory, db and bcrypt initialization |
-| `application/app.py` | All REST API routes and view handlers |
-| `application/models.py` | User model with password hashing |
-| `application/utils/auth.py` | Token generation, verification, `@requires_auth` decorator |
-| `config.py` | Flask configuration (BaseConfig, TestingConfig) |
-| `manage.py` | Flask-Script CLI (runserver, create_db, db migrations) |
-| `commander.sh` | Shell script for setup, start, stop, db operations |
-| `static/src/routes.js` | React Router route definitions |
-| `static/src/store/configureStore.js` | Redux store with thunk and logger middleware |
-| `static/src/index.js` | React entry point (jQuery-based component mounting) |
-| `static/package.json` | Frontend dependencies and npm scripts |
-| `requirements.txt` | Python dependencies (no version pinning) |
-| `Procfile` | Heroku deployment config (`web: gunicorn main:app`) |
+| `app/main.py` | FastAPI app factory with lifespan events |
+| `app/config.py` | Pydantic Settings (env vars, `.env` file) |
+| `app/database.py` | SQLModel engine, session generator, SQLite pragmas |
+| `app/models/user.py` | User table + UserCreate/UserRead schemas |
+| `app/models/company.py` | Company table + CompanyRead schema |
+| `app/models/financial_data.py` | FinancialData table (40+ metric and rank columns) |
+| `app/routers/auth.py` | Register, login, get current user |
+| `app/routers/companies.py` | List/search/get companies |
+| `app/routers/rankings.py` | List strategies, get rankings by strategy |
+| `app/services/auth.py` | JWT token creation and verification |
+| `app/services/rankings.py` | Ranking query engine, strategy definitions |
+| `fly.toml` | Fly.io deployment config |
+| `Dockerfile` | Container build definition |
+| `requirements.txt` | Pinned Python dependencies |
+| `.env.example` | Environment variable template |
 
 ## API Endpoints
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| GET | `/` | No | Serve SPA index.html |
-| POST | `/user/create` | No | Register new user (JSON) |
-| POST | `/api/get_token` | No | Login, returns auth token |
-| POST | `/api/is_token_valid` | No | Validate an auth token |
-| GET | `/login` | Yes | Get current user info |
-| GET | `/user/new` | No | User creation form (template) |
-| POST | `/user/invite-sent` | No | Send Mailgun invitation email |
+| GET | `/health` | No | Health check |
+| POST | `/api/auth/register` | No | Register new user, returns JWT |
+| POST | `/api/auth/login` | No | Login, returns JWT |
+| GET | `/api/auth/me` | Yes | Get current user info |
+| GET | `/api/companies/` | Yes | List/search companies (paginated) |
+| GET | `/api/companies/{symbol}` | Yes | Get company detail |
+| GET | `/api/rankings/strategies` | Yes | List available ranking strategies |
+| GET | `/api/rankings/{strategy}` | Yes | Get ranked results for a strategy |
+| GET | `/docs` | No | Auto-generated Swagger UI |
+| GET | `/redoc` | No | Auto-generated ReDoc |
 
 ## Database
 
-### Current schema (SQLAlchemy)
-- **user** table: `id` (PK), `email` (unique, string 255), `password` (bcrypt hash, string 255)
+### Schema (SQLModel)
+- **users**: `id` (PK), `email` (unique), `password_hash` (bcrypt), `is_active`
+- **companies**: `id` (PK), `symbol` (unique), `name`, `sector`, `industry`
+- **financial_data**: `id` (PK), `company_id` (FK), `symbol`, `date`, plus 25 metric columns and 13 rank columns
 
-### Legacy v1 schema (Peewee)
-- **company** table: `id`, `symbol` (unique), `name`, `sector`, `industry`
-- **financialdata** table: `id`, `company` (FK), `symbol` (unique), `date`, plus 40+ financial metric and rank columns
+### Ranking strategies
+- Magic Formula (Trailing and Future)
+- EBITDA, PE Ratio (TTM/FTM), GARP Ratio
+- Return on Assets, Return on Equity, Dividend Yield
 
 ## Authentication Flow
 
-1. User registers via POST `/user/create` with email/password JSON
-2. Password hashed with bcrypt, stored in `user` table
-3. Token generated via `itsdangerous.TimedJSONWebSignatureSerializer` (2-week expiry)
-4. Token contains `{id, email}`, signed with `SECRET_KEY`
-5. Frontend stores token in `localStorage`
-6. Subsequent requests send token in `Authorization` header
-7. `@requires_auth` decorator validates token and populates `g.current_user`
+1. User registers via `POST /api/auth/register` with `{email, password}`
+2. Password hashed with bcrypt via passlib, stored in `users` table
+3. JWT generated via python-jose (HS256, 2-week expiry)
+4. Token contains `{sub: user_id, email, exp}`
+5. Subsequent requests send `Authorization: Bearer <token>`
+6. `get_current_user` dependency validates token and returns User
 
 ## Environment Variables
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
-| `DATABASE_URL` | Yes | None | PostgreSQL/MySQL/SQLite connection string |
-| `PORT` | No | 3000 | Frontend dev server port |
-| `NODE_ENV` | No | development | Node environment flag |
+| `DATABASE_URL` | No | `sqlite:///data/stocker.db` | Database connection string |
+| `SECRET_KEY` | Yes | `change-me-in-production` | JWT signing key |
+| `MAILGUN_API_KEY` | No | `""` | Mailgun API key |
+| `MAILGUN_DOMAIN` | No | `""` | Mailgun sending domain |
+
+Secrets are managed via [EnvVault](https://envvault.fly.dev) under the `stocker` namespace.
 
 ## Development
 
-### Setup
+### Local setup
 ```bash
-source commander.sh setup    # creates venv, installs deps, inits db
-./commander startapp          # starts Flask (5000) + webpack dev server (3000)
-./commander stopapp           # kills both servers
-```
-
-### Manual setup
-```bash
-virtualenv -p python3 venv && source venv/bin/activate
-pip3 install -r requirements.txt
-export DATABASE_URL="postgresql://user:pass@localhost/dbname"
-python manage.py create_db
-python manage.py runserver    # backend on :5000
-cd static && npm install && npm start  # frontend on :3000
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # edit with your values
+uvicorn app.main:app --reload  # API on :8000
 ```
 
 ### Testing
 ```bash
-python test.py --cov-report=term --cov-report=html --cov=application/ tests/
+pytest
 ```
 
-### Build
+### Docker
 ```bash
-cd static && npm run build:production  # webpack production bundle
+docker build -t stockrocker .
+docker run -p 8000:8000 -v $(pwd)/data:/data stockrocker
 ```
-
-## Known Security Issues
-
-- `SECRET_KEY` hardcoded as `"SO_SECURE"` in `config.py:7`
-- Mailgun API key exposed in `application/libs/mailgun/mailgun.py:4`
-- Quandl API key exposed in `v1/import_financials.py:26`
-- Database credentials hardcoded in `commander.sh:4`
-- Auth tokens stored in `localStorage` (vulnerable to XSS)
-- No CORS configuration
-- No rate limiting on auth endpoints
-- Bare `except:` clauses swallow errors silently
 
 ## Deployment
 
-- Heroku via `Procfile` (`web: gunicorn main:app`)
-- No Docker configuration
-- No CI/CD pipeline
-- Frontend proxies `/api/*` to Flask backend on `localhost:5000` during development
+### Fly.io
+- **App**: `fischer-stocker`
+- **Region**: `ewr`
+- **Volume**: `stocker_data` (1GB, mounted at `/data` for SQLite)
+- **Config**: `fly.toml`
+- **Deploy**: `flyctl deploy`
+
+### Secrets (EnvVault)
+Stored in the `stocker` namespace:
+- `SECRET_KEY`
+- `DATABASE_URL`
+- `MAILGUN_API_KEY`
+- `MAILGUN_DOMAIN`

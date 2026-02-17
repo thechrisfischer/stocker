@@ -1,23 +1,35 @@
-# Stocker Modernization Plan
+# StockRocker Modernization Plan
 
 ## Current State Assessment
 
 ### What exists today
-Stocker has two disconnected generations:
+StockRocker (formerly Stocker) has two disconnected legacy generations and a new v3 foundation:
 
 1. **v1 (legacy)**: A working stock ranking system with data import pipelines (Yahoo Finance, Quandl, NASDAQ CSV scraping), financial calculation engines (Magic Formula, GARP, PE ratios, ROA/ROE), and a Flask/Peewee server-rendered UI. Written in Python 2.x style, uses deprecated APIs (Yahoo Finance YQL), and is isolated in the `v1/` directory.
 
-2. **v2 (current)**: A Flask REST API + React/Redux SPA skeleton that implements user authentication (registration, login, token-based auth) but none of the stock analysis features. Uses outdated but more modern tooling (React 15, Redux 3, Webpack 1, Babel 6).
+2. **v2 (legacy)**: A Flask REST API + React/Redux SPA skeleton that implements user authentication (registration, login, token-based auth) but none of the stock analysis features. Uses outdated tooling (React 15, Redux 3, Webpack 1, Babel 6).
 
-### Core problems
-- The stock analysis logic (v1's real value) was never migrated to the v2 architecture
-- Both frontend and backend dependencies are severely outdated (5-9 years old)
-- No dependency version pinning — builds are non-reproducible
-- Hardcoded secrets throughout the codebase
-- No CI/CD, no Docker, no automated quality gates
-- v1 data sources (Yahoo Finance YQL API, Quandl) are defunct
-- No frontend tests exist
-- Backend tests reference an endpoint (`/api/create_user`) that no longer exists in routes (it's commented out)
+3. **v3 (new foundation)**: FastAPI + SQLModel backend in `app/`, deployed on Fly.io with SQLite. Auth (register/login/JWT), company listing, and ranking endpoints are implemented. Secrets managed via EnvVault. Docker-ready. No frontend yet.
+
+### Completed (Phase 1)
+- Migrated backend from Flask to **FastAPI** with **SQLModel** (SQLAlchemy 2.0 + Pydantic)
+- Replaced itsdangerous tokens with **python-jose JWT** (HS256, 2-week expiry)
+- Replaced Flask-Bcrypt with **passlib bcrypt**
+- Created SQLModel models for User, Company, FinancialData (ported from v1 Peewee schema)
+- Set up **Fly.io** deployment (app: `fischer-stocker`, volume: `stocker_data`, region: `ewr`)
+- Dockerized the application
+- Stored secrets in **EnvVault** (`stocker` namespace)
+- Pinned all dependency versions
+- Added `.env.example`, `.dockerignore`, updated `.gitignore`
+- SQLite with WAL mode on persistent volume
+
+### Remaining problems
+- v1 data sources (Yahoo Finance YQL API, Quandl) are defunct — need modern replacements
+- No financial data import pipeline in v3 yet
+- No frontend exists for v3
+- No tests for the new FastAPI code
+- No CI/CD pipeline
+- Legacy code (v1/, application/, static/) still present
 
 ---
 
