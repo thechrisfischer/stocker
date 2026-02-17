@@ -35,6 +35,21 @@ app.include_router(companies.router)
 app.include_router(rankings.router)
 
 
+@app.get("/")
+def root():
+    return {
+        "app": settings.app_name,
+        "version": "2.0.0",
+        "docs": "/docs",
+        "health": "/health",
+        "endpoints": {
+            "auth": "/api/auth",
+            "companies": "/api/companies",
+            "rankings": "/api/rankings",
+        },
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "app": settings.app_name}
