@@ -1,0 +1,24 @@
+app = "fischer-stocker"
+primary_region = "ewr"
+
+[build]
+
+[env]
+  DATABASE_URL = "sqlite:///data/stocker.db"
+
+[mounts]
+  source = "stocker_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
